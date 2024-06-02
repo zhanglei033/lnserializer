@@ -15,7 +15,7 @@ set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 
 # 编译程序
-# add_subdirectory(benchmark/3rd/protobuf)
+add_subdirectory(benchmark/third_party/protobuf)
 
 set(CUR_HEADER benchmark/protobuf/test.pb.h)
 set(CUR_SOURCE 
@@ -23,8 +23,52 @@ set(CUR_SOURCE
 	benchmark/protobuf/test.pb.cc
 )
 add_executable(${PROJECT_NAME} ${CUR_SOURCE} ${CUR_HEADER})
-include_directories(benchmark/3rd/protobuf/src)
-include_directories(benchmark/3rd/protobuf/third_party/abseil-cpp)
+include_directories(benchmark/third_party/protobuf/src)
+include_directories(benchmark/third_party/protobuf/third_party/abseil-cpp)
+target_link_libraries(${PROJECT_NAME}
+	libprotoc
+	libprotobuf
+	absl::absl_check
+    absl::absl_log
+    absl::algorithm
+    absl::base
+    absl::bind_front
+    absl::bits
+    absl::btree
+    absl::cleanup
+    absl::cord
+    absl::core_headers
+    absl::debugging
+    absl::die_if_null
+    absl::dynamic_annotations
+    absl::flags
+    absl::flat_hash_map
+    absl::flat_hash_set
+    absl::function_ref
+    absl::hash
+    absl::if_constexpr
+    absl::layout
+    absl::log_initialize
+    absl::log_globals
+    absl::log_severity
+    absl::memory
+    absl::node_hash_map
+    absl::node_hash_set
+    absl::optional
+    absl::random_distributions
+    absl::random_random
+    absl::span
+    absl::status
+    absl::statusor
+    absl::strings
+    absl::synchronization
+    absl::time
+    absl::type_traits
+    absl::utility
+    absl::variant
+)
+
+
 
 foreach(COMPONENT_PATH ${COMPONENT_PATHS})
 	message("add_subdirectory:${COMPONENT_PATH}")
