@@ -486,8 +486,8 @@ TEST(lnserializer, test_custom)
     bin >> v2;
     EXPECT_EQ(true, v1 == v2);
 }
-int main(int argc, char** argv)
-{
-    testing::InitGoogleTest(&argc, argv);
-    return ::testing::UnitTest::GetInstance()->Run();
-}
+ int main(int argc, char** argv)
+ {
+     testing::InitGoogleTest(&argc, argv);
+     return ::testing::UnitTest::GetInstance()->Run();
+ }
