@@ -25,6 +25,7 @@ set(CUR_SOURCE
 add_executable(${PROJECT_NAME} ${CUR_SOURCE} ${CUR_HEADER})
 include_directories(benchmark/third_party/protobuf/src)
 include_directories(benchmark/third_party/protobuf/third_party/abseil-cpp)
+include_directories(benchmark/third_party)
 target_link_libraries(${PROJECT_NAME}
 	libprotoc
 	libprotobuf
@@ -67,8 +68,6 @@ target_link_libraries(${PROJECT_NAME}
     absl::utility
     absl::variant
 )
-
-
 
 foreach(COMPONENT_PATH ${COMPONENT_PATHS})
 	message("add_subdirectory:${COMPONENT_PATH}")

@@ -1,4 +1,5 @@
 ﻿#pragma once
+/* lnbase begin */
 // win32
 #if defined(WIN64) || defined(_WIN64) || defined(WIN32) || defined(_WIN32)
 #define LN_PLATFORM_WIN32 1
@@ -34,7 +35,7 @@
 #endif
 
 #ifndef LN_APP_NDEBUG
-#define LN_APP_NDEBUG 0
+#define LN_APP_NDEBUG 1
 #endif
 
 typedef float  float32_t;
@@ -144,7 +145,9 @@ typedef double float64_t;
 #else
 #define LN_FALLTHROUGH
 #endif
+/* lnbase end */
 
+/* lntype_tarits begin */
 namespace ln {
 /*
  * @brief确定类型参数是否为指针
@@ -542,7 +545,9 @@ struct func_traits<R (C::*)(Args...) const>
     using func_type   = std::function<R (C::*)(Args...)>;
 };
 } // namespace ln
+/* lntype_tarits end */
 
+/* lnserializer begin */
 #if LN_APP_NDEBUG
 #define serialization_check_offset(cont)
 #else
@@ -550,6 +555,8 @@ struct func_traits<R (C::*)(Args...) const>
     if (cont.offset == static_cast<size_t>(-1)) \
         return cont;
 #endif
+
+#define LN_SERIALIZER_VERSION "1000"
 
 namespace ln {
 namespace serializer_internal {
@@ -559,7 +566,7 @@ struct serialization_container_has_append : std::false_type
 };
 
 template <class T>
-struct serialization_container_has_append<T, std::void_t<decltype(std::declval<T>().append(std::declval<const uint8_t*>(), std::declval<size_t>()))>> : std::true_type
+struct serialization_container_has_append<T, std::void_t<decltype(std::declval<T>().append(nullptr, 0))>> : std::true_type
 {
 };
 
@@ -610,9 +617,9 @@ using serialization_container_size_return_type = serialization_container_func_re
 template <class T>
 static inline constexpr bool serialization_container_check1 = serialization_container_has_append<T>::value;
 template <class T>
-static inline constexpr bool serialization_container_check2 = std::is_constructible_v<const uint8_t*, serialization_container_data_return_type<T>>;
+static inline constexpr bool serialization_container_check2 = std::is_convertible_v<serialization_container_data_return_type<T>, const void*>;
 template <class T>
-static inline constexpr bool serialization_container_check3 = std::is_constructible_v<size_t, serialization_container_size_return_type<T>>;
+static inline constexpr bool serialization_container_check3 = std::is_convertible_v<serialization_container_size_return_type<T>, size_t>;
 template <class T>
 static inline constexpr bool serialization_container_vaild = serialization_container_check1<T>&& serialization_container_check2<T>&& serialization_container_check3<T>;
 
@@ -689,8 +696,8 @@ struct serialization_basic_type
             {
                 size_t temp = (static_cast<size_t>(value) << len_control_bit) | byte_size;
                 cont.append(reinterpret_cast<const uint8_t*>(&temp), byte_size);
-                uint8_t size = static_cast<uint8_t>(static_cast<size_t>(value) >> (8 * cur_type_size - len_control_bit) & 0xF);
-                cont.append(&size, 1);
+                uint8_t byte = static_cast<uint8_t>(static_cast<size_t>(value) >> (8 * cur_type_size - len_control_bit) & 0xF);
+                cont.append(&byte, 1);
                 return cont;
             }
 
@@ -703,13 +710,7 @@ struct serialization_basic_type
     template <class Container, class T, class = std::enable_if_t<is_basic_type_v<T>>>
     inline static Container& deserialize(Container& cont, T& value)
     {
-        if (cont.offset == static_cast<size_t>(-1))
-            return cont;
-        if (cont.size() <= cont.offset)
-        {
-            cont.offset = static_cast<size_t>(-1);
-            return cont;
-        }
+        serialization_check_offset(cont);
         static constexpr uint8_t cur_type_size = sizeof(T);
         if constexpr (std::is_same<T, bool>::value
                       || cur_type_size == 1 || cur_type_size == 2
@@ -737,17 +738,21 @@ struct serialization_basic_type
 
             if (byte_size == cur_type_size)
             {
-                ::memcpy(&value, cont.cur(), cur_type_size);
-                value >>= 4;
+                size_t temp = 0;
+                ::memcpy(&temp, cont.cur(), cur_type_size);
+                temp >>= 4;
                 cont.offset += cur_type_size;
-                value |= static_cast<size_t>(*cont.cur()) << (8 * (cur_type_size - 1) + len_control_bit);
+                temp |= static_cast<size_t>(*cont.cur()) << (8 * (cur_type_size - 1) + len_control_bit);
+                value = temp;
                 cont.offset += 1;
                 return cont;
             }
 
-            ::memcpy(&value, cont.cur(), byte_size + 1);
-            value >>= len_control_bit;
-            value &= static_cast<size_t>(-1) >> (8 * (7 - byte_size) + len_control_bit);
+            size_t temp = 0;
+            ::memcpy(&temp, cont.cur(), byte_size + 1);
+            temp >>= len_control_bit;
+            temp &= static_cast<size_t>(-1) >> (8 * (7 - byte_size) + len_control_bit);
+            value = temp;
             cont.offset += byte_size + 1;
             return cont;
         }
@@ -773,7 +778,10 @@ struct serialization_stl_type
         cont >> size;
         serialization_check_offset(cont);
         if (cont.size() < cont.offset + size || size == 0)
+        {
+            cont.offset = static_cast<size_t>(-1);
             return cont;
+        }
 
         value.assign(reinterpret_cast<const char*>(cont.cur()), size);
         cont.offset += size;
@@ -1433,18 +1441,19 @@ struct serialization_container
 
     serialization_container& append(const uint8_t* elem, size_t count)
     {
-        cont.append(elem, count);
+        using value_type = Container::value_type;
+        cont.append(reinterpret_cast<const value_type*>(elem), count);
         return *this;
     }
 
     const uint8_t* cur() const
     {
-        return cont.data() + offset;
+        return reinterpret_cast<const uint8_t*>(cont.data()) + offset;
     }
 
     size_t size() const
     {
-        return cont.size();
+        return static_cast<size_t>(cont.size());
     }
 
     template <class T>
@@ -1472,3 +1481,4 @@ struct serialization_container
     }
 };
 } // namespace ln
+/* lnserializer end */
