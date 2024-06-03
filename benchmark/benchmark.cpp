@@ -402,6 +402,7 @@ benchmark_result benchmark_cereal_serialization(size_t count)
     auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(finish - start).count();
 
     return benchmark_result("cereal", "", serialized.size(), duration);
+    return benchmark_result("cereal", "1.3.2", serialized.size(), duration);
 }
 
 int main(int argc, char** argv)
