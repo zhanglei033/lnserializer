@@ -17,6 +17,11 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 # 编译程序
 add_subdirectory(benchmark/third_party/protobuf)
 
+foreach(COMPONENT_PATH ${COMPONENT_PATHS})
+	message("add_subdirectory:${COMPONENT_PATH}")
+	add_subdirectory(${COMPONENT_PATH})
+endforeach()
+
 set(CUR_HEADER benchmark/protobuf/test.pb.h)
 set(CUR_SOURCE 
 	benchmark/benchmark.cpp 
@@ -26,6 +31,8 @@ add_executable(${PROJECT_NAME} ${CUR_SOURCE} ${CUR_HEADER})
 include_directories(benchmark/third_party/protobuf/src)
 include_directories(benchmark/third_party/protobuf/third_party/abseil-cpp)
 include_directories(benchmark/third_party)
+include_all()
+
 target_link_libraries(${PROJECT_NAME}
 	libprotoc
 	libprotobuf
@@ -69,14 +76,6 @@ target_link_libraries(${PROJECT_NAME}
     absl::variant
 )
 
-foreach(COMPONENT_PATH ${COMPONENT_PATHS})
-	message("add_subdirectory:${COMPONENT_PATH}")
-	add_subdirectory(${COMPONENT_PATH})
-endforeach()
-set(CUR_SOURCE lnserializer_test.cpp)
-set(CUR_HEADER lnserializer.h)
 
-add_executable(lnserializer_test ${CUR_SOURCE} ${CUR_HEADER})
-include_all()
-target_link_libraries(lnserializer_test googletest)
+
 

@@ -1,5 +1,5 @@
 #include "cereal/record.h"
-#include "lnserializer.h"
+#include "lnutility.h"
 #include "protobuf/test.pb.h"
 #include "yas/record.h"
 #include <string>
@@ -7,7 +7,7 @@
 #define LN_PP_STRING_IMPL(x) #x
 #define LN_PP_STRING(x)      LN_PP_STRING_IMPL(x)
 
-static inline constexpr auto        benchmark_strings_count  = 4;
+static inline constexpr auto        benchmark_strings_count  = 100;
 static inline constexpr const char* benchmark_string_value[] = {
     "0123456789abcdef",
     "0123456789abcdef0123456789abcdef",
@@ -255,33 +255,23 @@ benchmark_result benchmark_protobuf_serialization(size_t count)
     auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(finish - start).count();
     return benchmark_result("protobuf", LN_PP_STRING(GOOGLE_PROTOBUF_VERSION), serialized.size(), duration);
 }
+struct lnserializerRecord
+{
+    using integers_t = std::vector<int64_t>;
+    using strings_t  = std::vector<std::string>;
 
+    integers_t ids;
+    strings_t  strings;
+};
+LN_TYPE_INFO_FIELDS_DECL(lnserializerRecord, ids, strings);
+
+template <std::size_t opts>
 benchmark_result benchmark_lnserializer_serialization(size_t count)
 {
     using namespace ln;
-    using container_t = serialization_container<std::string>;
+    using container_t = serialization_container<std::string, opts>;
 
-    struct Record
-    {
-        using integers_t = std::vector<int64_t>;
-        using strings_t  = std::vector<std::string>;
-
-        integers_t ids;
-        strings_t  strings;
-
-        auto deserialize_tuple()
-        {
-            std::tuple<integers_t&, strings_t&> tuple(ids, strings);
-            return tuple;
-        }
-
-        auto serialize_tuple() const
-        {
-            std::tuple<const integers_t&, const strings_t&> tuple(ids, strings);
-            return tuple;
-        }
-    };
-    Record r1;
+    lnserializerRecord r1;
     r1.ids.insert(r1.ids.end(), benchmark_integers, benchmark_integers + benchmark_integer_count);
     for (size_t i = 0; i < benchmark_strings_count; i++)
     {
@@ -292,7 +282,7 @@ benchmark_result benchmark_lnserializer_serialization(size_t count)
     }
     container_t serialized;
     serialized << r1;
-    Record r2;
+    lnserializerRecord r2;
     serialized >> r2;
 
     if (serialized.offset == static_cast<size_t>(-1))
@@ -302,17 +292,27 @@ benchmark_result benchmark_lnserializer_serialization(size_t count)
     if (r1.strings != r2.strings)
         throw std::logic_error("lnserializer's case: deserialization failed : strings");
 
+    std::string tag;
+    if (opts & serialization_options::LN_COMPACTED)
+    {
+        tag = "lnserializer-compact";
+    }
+    else
+    {
+        tag = "lnserializer";
+    }
+
     auto start = std::chrono::high_resolution_clock::now();
     for (size_t i = 0; i < count; i++)
     {
-        serialized.cont.clear();
+        // serialized.cont.clear();
         serialized.offset = 0;
-        serialized << r1;
+        // serialized << r1;
         serialized >> r2;
     }
     auto finish   = std::chrono::high_resolution_clock::now();
     auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(finish - start).count();
-    return benchmark_result("lnserializer", LN_SERIALIZER_VERSION, serialized.size(), duration);
+    return benchmark_result(tag, LN_SERIALIZER_VERSION, serialized.size(), duration);
 }
 
 template <std::size_t opts>
@@ -342,7 +342,6 @@ benchmark_result benchmark_yas_serialization(size_t count)
         throw std::logic_error("yas's case: deserialization failed : strings");
 
     std::string tag;
-
     if (opts & yas::compacted)
     {
         tag = "yas-compact";
@@ -355,8 +354,8 @@ benchmark_result benchmark_yas_serialization(size_t count)
     auto start = std::chrono::high_resolution_clock::now();
     for (size_t i = 0; i < count; i++)
     {
-        serialized.clear();
-        r1.to_string<opts>(serialized);
+        // serialized.clear();
+        // r1.to_string<opts>(serialized);
         r2.from_string<opts>(serialized);
     }
     auto finish   = std::chrono::high_resolution_clock::now();
@@ -401,16 +400,38 @@ benchmark_result benchmark_cereal_serialization(size_t count)
     auto finish   = std::chrono::high_resolution_clock::now();
     auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(finish - start).count();
 
-    return benchmark_result("cereal", "", serialized.size(), duration);
     return benchmark_result("cereal", "1.3.2", serialized.size(), duration);
 }
+
+class custom_t
+{
+public:
+    uint8_t     u8;
+    std::string str;
+
+    bool operator==(const custom_t& other)
+    {
+        return u8 == other.u8 && str == other.str;
+    }
+
+    inline static constexpr auto serialize_tuple()
+    {
+        return std::make_tuple(&custom_t::u8, &custom_t::str);
+    }
+};
 
 int main(int argc, char** argv)
 {
     size_t                        count = 10000;
     std::vector<benchmark_result> results;
     results.push_back(benchmark_protobuf_serialization(count));
-    results.push_back(benchmark_lnserializer_serialization(count));
+    results.push_back(benchmark_lnserializer_serialization<
+                      ln::serialization_options::LN_BINARY
+                      | ln::serialization_options::LN_NO_HEADER>(count));
+    results.push_back(benchmark_lnserializer_serialization<
+                      ln::serialization_options::LN_BINARY
+                      | ln::serialization_options::LN_NO_HEADER
+                      | ln::serialization_options::LN_COMPACTED>(count));
     results.push_back(benchmark_yas_serialization<yas::binary | yas::no_header>(count));
     results.push_back(benchmark_yas_serialization<yas::binary | yas::no_header | yas::compacted>(count));
     results.push_back(benchmark_cereal_serialization(count));
