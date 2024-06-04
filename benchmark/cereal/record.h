@@ -13,17 +13,19 @@
 
 namespace cereal_test {
 
-typedef std::vector<int64_t>     Integers;
+typedef std::vector<uint64_t>    Integers;
 typedef std::vector<std::string> Strings;
+typedef std::vector<double>      Floats;
 
 class Record {
 public:
 
     Integers ids;
     Strings  strings;
+    Floats   floats;
 
     bool operator==(const Record &other) {
-        return (ids == other.ids && strings == other.strings);
+        return (ids == other.ids && strings == other.strings && floats == other.floats);
     }
 
     bool operator!=(const Record &other) {
@@ -51,7 +53,7 @@ private:
     template<typename Archive>
     void serialize(Archive &archive)
     {
-        archive(ids, strings);
+        archive(ids, strings, floats);
     }
 };
 

@@ -1,4 +1,4 @@
-#include "cereal/record.h"
+﻿#include "cereal/record.h"
 #include "lnutility.h"
 #include "protobuf/test.pb.h"
 #include "yas/record.h"
@@ -7,191 +7,17 @@
 #define LN_PP_STRING_IMPL(x) #x
 #define LN_PP_STRING(x)      LN_PP_STRING_IMPL(x)
 
-static inline constexpr auto        benchmark_strings_count  = 100;
-static inline constexpr const char* benchmark_string_value[] = {
-    "0123456789abcdef",
-    "0123456789abcdef0123456789abcdef",
-    "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef",
-    "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef",
+struct benchmark_data
+{
+    std::vector<uint64_t>     ints;
+    std::vector<float64_t>   floats;
+    std::vector<std::string> strs;
+    uint64_t                 count;
 };
-
-// clang-format off
- static inline constexpr int64_t benchmark_integers[] = {
-    0x00,0x01,0x02,0x03,0x04,0x05,0x06,0x07,0x08,0x09,0x0A,0x0B,0x0C,0x0D,0x0E,0x0F,
-    0x70,0x71,0x72,0x73,0x74,0x75,0x76,0x77,0x78,0x79,0x7A,0x7B,0x7C,0x7D,0x7E,0x7F,
-    0xF0,0xF1,0xF2,0xF3,0xF4,0xF5,0xF6,0xF7,0xF8,0xF9,0xFA,0xFB,0xFC,0xFD,0xFE,0xFF,
- 
-    0x100,0x101,0x102,0x103,0x104,0x105,0x106,0x107,0x108,0x109,0x10A,0x10B,0x10C,0x10D,0x10E,0x10F,
-    0x170,0x171,0x172,0x173,0x174,0x175,0x176,0x177,0x178,0x179,0x17A,0x17B,0x17C,0x17D,0x17E,0x17F,
-    0x1F0,0x1F1,0x1F2,0x1F3,0x1F4,0x1F5,0x1F6,0x1F7,0x1F8,0x1F9,0x1FA,0x1FB,0x1FC,0x1FD,0x1FE,0x1FF,
-    0x700,0x701,0x702,0x703,0x704,0x705,0x706,0x707,0x708,0x709,0x70A,0x70B,0x70C,0x70D,0x70E,0x70F,
-    0x770,0x771,0x772,0x773,0x774,0x775,0x776,0x777,0x778,0x779,0x77A,0x77B,0x77C,0x77D,0x77E,0x77F,
-    0x7F0,0x7F1,0x7F2,0x7F3,0x7F4,0x7F5,0x7F6,0x7F7,0x7F8,0x7F9,0x7FA,0x7FB,0x7FC,0x7FD,0x7FE,0x7FF,
-    0xF00,0xF01,0xF02,0xF03,0xF04,0xF05,0xF06,0xF07,0xF08,0xF09,0xF0A,0xF0B,0xF0C,0xF0D,0xF0E,0xF0F,
-    0xF70,0xF71,0xF72,0xF73,0xF74,0xF75,0xF76,0xF77,0xF78,0xF79,0xF7A,0xF7B,0xF7C,0xF7D,0xF7E,0xF7F,
-    0xFF0,0xFF1,0xFF2,0xFF3,0xFF4,0xFF5,0xFF6,0xFF7,0xFF8,0xFF9,0xFFA,0xFFB,0xFFC,0xFFD,0xFFE,0xFFF,
-
-    0xF100,0xF101,0xF102,0xF103,0xF104,0xF105,0xF106,0xF107,0xF108,0xF109,0xF10A,0xF10B,0xF10C,0xF10D,0xF10E,0xF10F,
-    0xF170,0xF171,0xF172,0xF173,0xF174,0xF175,0xF176,0xF177,0xF178,0xF179,0xF17A,0xF17B,0xF17C,0xF17D,0xF17E,0xF17F,
-    0xF1F0,0xF1F1,0xF1F2,0xF1F3,0xF1F4,0xF1F5,0xF1F6,0xF1F7,0xF1F8,0xF1F9,0xF1FA,0xF1FB,0xF1FC,0xF1FD,0xF1FE,0xF1FF,
-    0xF700,0xF701,0xF702,0xF703,0xF704,0xF705,0xF706,0xF707,0xF708,0xF709,0xF70A,0xF70B,0xF70C,0xF70D,0xF70E,0xF70F,
-    0xF770,0xF771,0xF772,0xF773,0xF774,0xF775,0xF776,0xF777,0xF778,0xF779,0xF77A,0xF77B,0xF77C,0xF77D,0xF77E,0xF77F,
-    0xF7F0,0xF7F1,0xF7F2,0xF7F3,0xF7F4,0xF7F5,0xF7F6,0xF7F7,0xF7F8,0xF7F9,0xF7FA,0xF7FB,0xF7FC,0xF7FD,0xF7FE,0xF7FF,
-    0xFF00,0xFF01,0xFF02,0xFF03,0xFF04,0xFF05,0xFF06,0xFF07,0xFF08,0xFF09,0xFF0A,0xFF0B,0xFF0C,0xFF0D,0xFF0E,0xFF0F,
-    0xFF70,0xFF71,0xFF72,0xFF73,0xFF74,0xFF75,0xFF76,0xFF77,0xFF78,0xFF79,0xFF7A,0xFF7B,0xFF7C,0xFF7D,0xFF7E,0xFF7F,
-    0xFFF0,0xFFF1,0xFFF2,0xFFF3,0xFFF4,0xFFF5,0xFFF6,0xFFF7,0xFFF8,0xFFF9,0xFFFA,0xFFFB,0xFFFC,0xFFFD,0xFFFE,0xFFFF,
-
-    0xFF100,0xFF101,0xFF102,0xFF103,0xFF104,0xFF105,0xFF106,0xFF107,0xFF108,0xFF109,0xFF10A,0xFF10B,0xFF10C,0xFF10D,0xFF10E,0xFF10F,
-    0xFF170,0xFF171,0xFF172,0xFF173,0xFF174,0xFF175,0xFF176,0xFF177,0xFF178,0xFF179,0xFF17A,0xFF17B,0xFF17C,0xFF17D,0xFF17E,0xFF17F,
-    0xFF1F0,0xFF1F1,0xFF1F2,0xFF1F3,0xFF1F4,0xFF1F5,0xFF1F6,0xFF1F7,0xFF1F8,0xFF1F9,0xFF1FA,0xFF1FB,0xFF1FC,0xFF1FD,0xFF1FE,0xFF1FF,
-    0xFF700,0xFF701,0xFF702,0xFF703,0xFF704,0xFF705,0xFF706,0xFF707,0xFF708,0xFF709,0xFF70A,0xFF70B,0xFF70C,0xFF70D,0xFF70E,0xFF70F,
-    0xFF770,0xFF771,0xFF772,0xFF773,0xFF774,0xFF775,0xFF776,0xFF777,0xFF778,0xFF779,0xFF77A,0xFF77B,0xFF77C,0xFF77D,0xFF77E,0xFF77F,
-    0xFF7F0,0xFF7F1,0xFF7F2,0xFF7F3,0xFF7F4,0xFF7F5,0xFF7F6,0xFF7F7,0xFF7F8,0xFF7F9,0xFF7FA,0xFF7FB,0xFF7FC,0xFF7FD,0xFF7FE,0xFF7FF,
-    0xFFF00,0xFFF01,0xFFF02,0xFFF03,0xFFF04,0xFFF05,0xFFF06,0xFFF07,0xFFF08,0xFFF09,0xFFF0A,0xFFF0B,0xFFF0C,0xFFF0D,0xFFF0E,0xFFF0F,
-    0xFFF70,0xFFF71,0xFFF72,0xFFF73,0xFFF74,0xFFF75,0xFFF76,0xFFF77,0xFFF78,0xFFF79,0xFFF7A,0xFFF7B,0xFFF7C,0xFFF7D,0xFFF7E,0xFFF7F,
-    0xFFFF0,0xFFFF1,0xFFFF2,0xFFFF3,0xFFFF4,0xFFFF5,0xFFFF6,0xFFFF7,0xFFFF8,0xFFFF9,0xFFFFA,0xFFFFB,0xFFFFC,0xFFFFD,0xFFFFE,0xFFFFF,
-
-    0xFFF100,0xFFF101,0xFFF102,0xFFF103,0xFFF104,0xFFF105,0xFFF106,0xFFF107,
-    0xFFF108,0xFFF109,0xFFF10A,0xFFF10B,0xFFF10C,0xFFF10D,0xFFF10E,0xFFF10F,
-    0xFFF170,0xFFF171,0xFFF172,0xFFF173,0xFFF174,0xFFF175,0xFFF176,0xFFF177,
-    0xFFF178,0xFFF179,0xFFF17A,0xFFF17B,0xFFF17C,0xFFF17D,0xFFF17E,0xFFF17F,
-    0xFFF1F0,0xFFF1F1,0xFFF1F2,0xFFF1F3,0xFFF1F4,0xFFF1F5,0xFFF1F6,0xFFF1F7,
-    0xFFF1F8,0xFFF1F9,0xFFF1FA,0xFFF1FB,0xFFF1FC,0xFFF1FD,0xFFF1FE,0xFFF1FF,
-    0xFFF700,0xFFF701,0xFFF702,0xFFF703,0xFFF704,0xFFF705,0xFFF706,0xFFF707,
-    0xFFF708,0xFFF709,0xFFF70A,0xFFF70B,0xFFF70C,0xFFF70D,0xFFF70E,0xFFF70F,
-    0xFFF770,0xFFF771,0xFFF772,0xFFF773,0xFFF774,0xFFF775,0xFFF776,0xFFF777,
-    0xFFF778,0xFFF779,0xFFF77A,0xFFF77B,0xFFF77C,0xFFF77D,0xFFF77E,0xFFF77F,
-    0xFFF7F0,0xFFF7F1,0xFFF7F2,0xFFF7F3,0xFFF7F4,0xFFF7F5,0xFFF7F6,0xFFF7F7,
-    0xFFF7F8,0xFFF7F9,0xFFF7FA,0xFFF7FB,0xFFF7FC,0xFFF7FD,0xFFF7FE,0xFFF7FF,
-    0xFFFF00,0xFFFF01,0xFFFF02,0xFFFF03,0xFFFF04,0xFFFF05,0xFFFF06,0xFFFF07,
-    0xFFFF08,0xFFFF09,0xFFFF0A,0xFFFF0B,0xFFFF0C,0xFFFF0D,0xFFFF0E,0xFFFF0F,
-    0xFFFF70,0xFFFF71,0xFFFF72,0xFFFF73,0xFFFF74,0xFFFF75,0xFFFF76,0xFFFF77,
-    0xFFFF78,0xFFFF79,0xFFFF7A,0xFFFF7B,0xFFFF7C,0xFFFF7D,0xFFFF7E,0xFFFF7F,
-    0xFFFFF0,0xFFFFF1,0xFFFFF2,0xFFFFF3,0xFFFFF4,0xFFFFF5,0xFFFFF6,0xFFFFF7,
-    0xFFFFF8,0xFFFFF9,0xFFFFFA,0xFFFFFB,0xFFFFFC,0xFFFFFD,0xFFFFFE,0xFFFFFF,
-
-    0xFFFF100,0xFFFF101,0xFFFF102,0xFFFF103,0xFFFF104,0xFFFF105,0xFFFF106,0xFFFF107,
-    0xFFFF108,0xFFFF109,0xFFFF10A,0xFFFF10B,0xFFFF10C,0xFFFF10D,0xFFFF10E,0xFFFF10F,
-    0xFFFF170,0xFFFF171,0xFFFF172,0xFFFF173,0xFFFF174,0xFFFF175,0xFFFF176,0xFFFF177,
-    0xFFFF178,0xFFFF179,0xFFFF17A,0xFFFF17B,0xFFFF17C,0xFFFF17D,0xFFFF17E,0xFFFF17F,
-    0xFFFF1F0,0xFFFF1F1,0xFFFF1F2,0xFFFF1F3,0xFFFF1F4,0xFFFF1F5,0xFFFF1F6,0xFFFF1F7,
-    0xFFFF1F8,0xFFFF1F9,0xFFFF1FA,0xFFFF1FB,0xFFFF1FC,0xFFFF1FD,0xFFFF1FE,0xFFFF1FF,
-    0xFFFF700,0xFFFF701,0xFFFF702,0xFFFF703,0xFFFF704,0xFFFF705,0xFFFF706,0xFFFF707,
-    0xFFFF708,0xFFFF709,0xFFFF70A,0xFFFF70B,0xFFFF70C,0xFFFF70D,0xFFFF70E,0xFFFF70F,
-    0xFFFF770,0xFFFF771,0xFFFF772,0xFFFF773,0xFFFF774,0xFFFF775,0xFFFF776,0xFFFF777,
-    0xFFFF778,0xFFFF779,0xFFFF77A,0xFFFF77B,0xFFFF77C,0xFFFF77D,0xFFFF77E,0xFFFF77F,
-    0xFFFF7F0,0xFFFF7F1,0xFFFF7F2,0xFFFF7F3,0xFFFF7F4,0xFFFF7F5,0xFFFF7F6,0xFFFF7F7,
-    0xFFFF7F8,0xFFFF7F9,0xFFFF7FA,0xFFFF7FB,0xFFFF7FC,0xFFFF7FD,0xFFFF7FE,0xFFFF7FF,
-    0xFFFFF00,0xFFFFF01,0xFFFFF02,0xFFFFF03,0xFFFFF04,0xFFFFF05,0xFFFFF06,0xFFFFF07,
-    0xFFFFF08,0xFFFFF09,0xFFFFF0A,0xFFFFF0B,0xFFFFF0C,0xFFFFF0D,0xFFFFF0E,0xFFFFF0F,
-    0xFFFFF70,0xFFFFF71,0xFFFFF72,0xFFFFF73,0xFFFFF74,0xFFFFF75,0xFFFFF76,0xFFFFF77,
-    0xFFFFF78,0xFFFFF79,0xFFFFF7A,0xFFFFF7B,0xFFFFF7C,0xFFFFF7D,0xFFFFF7E,0xFFFFF7F,
-    0xFFFFFF0,0xFFFFFF1,0xFFFFFF2,0xFFFFFF3,0xFFFFFF4,0xFFFFFF5,0xFFFFFF6,0xFFFFFF7,
-    0xFFFFFF8,0xFFFFFF9,0xFFFFFFA,0xFFFFFFB,0xFFFFFFC,0xFFFFFFD,0xFFFFFFE,0xFFFFFFF,
-
-    0xFFFFF100,0xFFFFF101,0xFFFFF102,0xFFFFF103,0xFFFFF104,0xFFFFF105,0xFFFFF106,0xFFFFF107,
-    0xFFFFF108,0xFFFFF109,0xFFFFF10A,0xFFFFF10B,0xFFFFF10C,0xFFFFF10D,0xFFFFF10E,0xFFFFF10F,
-    0xFFFFF170,0xFFFFF171,0xFFFFF172,0xFFFFF173,0xFFFFF174,0xFFFFF175,0xFFFFF176,0xFFFFF177,
-    0xFFFFF178,0xFFFFF179,0xFFFFF17A,0xFFFFF17B,0xFFFFF17C,0xFFFFF17D,0xFFFFF17E,0xFFFFF17F,
-    0xFFFFF1F0,0xFFFFF1F1,0xFFFFF1F2,0xFFFFF1F3,0xFFFFF1F4,0xFFFFF1F5,0xFFFFF1F6,0xFFFFF1F7,
-    0xFFFFF1F8,0xFFFFF1F9,0xFFFFF1FA,0xFFFFF1FB,0xFFFFF1FC,0xFFFFF1FD,0xFFFFF1FE,0xFFFFF1FF,
-    0xFFFFF700,0xFFFFF701,0xFFFFF702,0xFFFFF703,0xFFFFF704,0xFFFFF705,0xFFFFF706,0xFFFFF707,
-    0xFFFFF708,0xFFFFF709,0xFFFFF70A,0xFFFFF70B,0xFFFFF70C,0xFFFFF70D,0xFFFFF70E,0xFFFFF70F,
-    0xFFFFF770,0xFFFFF771,0xFFFFF772,0xFFFFF773,0xFFFFF774,0xFFFFF775,0xFFFFF776,0xFFFFF777,
-
-    0x7FFFFF100,0x8FFFFF101,0x9FFFFF102,0xAFFFFF103,0xBFFFFF104,0xCFFFFF105,0xDFFFFF106,0xEFFFFF107,
-    0x7FFFFF108,0x8FFFFF109,0x9FFFFF10A,0xAFFFFF10B,0xBFFFFF10C,0xCFFFFF10D,0xDFFFFF10E,0xEFFFFF10F,
-    0x7FFFFF170,0x8FFFFF171,0x9FFFFF172,0xAFFFFF173,0xBFFFFF174,0xCFFFFF175,0xDFFFFF176,0xEFFFFF177,
-    0x7FFFFF178,0x8FFFFF179,0x9FFFFF17A,0xAFFFFF17B,0xBFFFFF17C,0xCFFFFF17D,0xDFFFFF17E,0xEFFFFF17F,
-    0x7FFFFF1F0,0x8FFFFF1F1,0x9FFFFF1F2,0xAFFFFF1F3,0xBFFFFF1F4,0xCFFFFF1F5,0xDFFFFF1F6,0xEFFFFF1F7,
-    0x7FFFFF1F8,0x8FFFFF1F9,0x9FFFFF1FA,0xAFFFFF1FB,0xBFFFFF1FC,0xCFFFFF1FD,0xDFFFFF1FE,0xEFFFFF1FF,
-    0x7FFFFF700,0x8FFFFF701,0x9FFFFF702,0xAFFFFF703,0xBFFFFF704,0xCFFFFF705,0xDFFFFF706,0xEFFFFF707,
-    0x7FFFFF708,0x8FFFFF709,0x9FFFFF70A,0xAFFFFF70B,0xBFFFFF70C,0xCFFFFF70D,0xDFFFFF70E,0xEFFFFF70F,
-    0x7FFFFF770,0x8FFFFF771,0x9FFFFF772,0xAFFFFF773,0xBFFFFF774,0xCFFFFF775,0xDFFFFF776,0xEFFFFF777,
-
-    0x87FFFFF100,0x98FFFFF101,0xA9FFFFF102,0xBAFFFFF103,0xCBFFFFF104,0xDCFFFFF105,0xEDFFFFF106,0xFEFFFFF107,
-    0x87FFFFF108,0x98FFFFF109,0xA9FFFFF10A,0xBAFFFFF10B,0xCBFFFFF10C,0xDCFFFFF10D,0xEDFFFFF10E,0xFEFFFFF10F,
-    0x87FFFFF170,0x98FFFFF171,0xA9FFFFF172,0xBAFFFFF173,0xCBFFFFF174,0xDCFFFFF175,0xEDFFFFF176,0xFEFFFFF177,
-    0x87FFFFF178,0x98FFFFF179,0xA9FFFFF17A,0xBAFFFFF17B,0xCBFFFFF17C,0xDCFFFFF17D,0xEDFFFFF17E,0xFEFFFFF17F,
-    0x87FFFFF1F0,0x98FFFFF1F1,0xA9FFFFF1F2,0xBAFFFFF1F3,0xCBFFFFF1F4,0xDCFFFFF1F5,0xEDFFFFF1F6,0xFEFFFFF1F7,
-    0x87FFFFF1F8,0x98FFFFF1F9,0xA9FFFFF1FA,0xBAFFFFF1FB,0xCBFFFFF1FC,0xDCFFFFF1FD,0xEDFFFFF1FE,0xFEFFFFF1FF,
-    0x87FFFFF700,0x98FFFFF701,0xA9FFFFF702,0xBAFFFFF703,0xCBFFFFF704,0xDCFFFFF705,0xEDFFFFF706,0xFEFFFFF707,
-    0x87FFFFF708,0x98FFFFF709,0xA9FFFFF70A,0xBAFFFFF70B,0xCBFFFFF70C,0xDCFFFFF70D,0xEDFFFFF70E,0xFEFFFFF70F,
-    0x87FFFFF770,0x98FFFFF771,0xA9FFFFF772,0xBAFFFFF773,0xCBFFFFF774,0xDCFFFFF775,0xEDFFFFF776,0xFEFFFFF777,
-
-    0x187FFFFF100,0x298FFFFF101,0x3A9FFFFF102,0x4BAFFFFF103,0x5CBFFFFF104,0x6DCFFFFF105,0x7EDFFFFF106,0x8FEFFFFF107,
-    0x187FFFFF108,0x298FFFFF109,0x3A9FFFFF10A,0x4BAFFFFF10B,0x5CBFFFFF10C,0x6DCFFFFF10D,0x7EDFFFFF10E,0x8FEFFFFF10F,
-    0x187FFFFF170,0x298FFFFF171,0x3A9FFFFF172,0x4BAFFFFF173,0x5CBFFFFF174,0x6DCFFFFF175,0x7EDFFFFF176,0x8FEFFFFF177,
-    0x187FFFFF178,0x298FFFFF179,0x3A9FFFFF17A,0x4BAFFFFF17B,0x5CBFFFFF17C,0x6DCFFFFF17D,0x7EDFFFFF17E,0x8FEFFFFF17F,
-    0x187FFFFF1F0,0x298FFFFF1F1,0x3A9FFFFF1F2,0x4BAFFFFF1F3,0x5CBFFFFF1F4,0x6DCFFFFF1F5,0x7EDFFFFF1F6,0x8FEFFFFF1F7,
-    0x187FFFFF1F8,0x298FFFFF1F9,0x3A9FFFFF1FA,0x4BAFFFFF1FB,0x5CBFFFFF1FC,0x6DCFFFFF1FD,0x7EDFFFFF1FE,0x8FEFFFFF1FF,
-    0x187FFFFF700,0x298FFFFF701,0x3A9FFFFF702,0x4BAFFFFF703,0x5CBFFFFF704,0x6DCFFFFF705,0x7EDFFFFF706,0x8FEFFFFF707,
-    0x187FFFFF708,0x298FFFFF709,0x3A9FFFFF70A,0x4BAFFFFF70B,0x5CBFFFFF70C,0x6DCFFFFF70D,0x7EDFFFFF70E,0x8FEFFFFF70F,
-    0x187FFFFF770,0x298FFFFF771,0x3A9FFFFF772,0x4BAFFFFF773,0x5CBFFFFF774,0x6DCFFFFF775,0x7EDFFFFF776,0x8FEFFFFF777,
-
-    0x9187FFFFF100,0xA298FFFFF101,0xB3A9FFFFF102,0xC4BAFFFFF103,0xD5CBFFFFF104,0xE6DCFFFFF105,0xF7EDFFFFF106,0x08FEFFFFF107,
-    0x9187FFFFF108,0xA298FFFFF109,0xB3A9FFFFF10A,0xC4BAFFFFF10B,0xD5CBFFFFF10C,0xE6DCFFFFF10D,0xF7EDFFFFF10E,0x08FEFFFFF10F,
-    0x9187FFFFF170,0xA298FFFFF171,0xB3A9FFFFF172,0xC4BAFFFFF173,0xD5CBFFFFF174,0xE6DCFFFFF175,0xF7EDFFFFF176,0x08FEFFFFF177,
-    0x9187FFFFF178,0xA298FFFFF179,0xB3A9FFFFF17A,0xC4BAFFFFF17B,0xD5CBFFFFF17C,0xE6DCFFFFF17D,0xF7EDFFFFF17E,0x08FEFFFFF17F,
-    0x9187FFFFF1F0,0xA298FFFFF1F1,0xB3A9FFFFF1F2,0xC4BAFFFFF1F3,0xD5CBFFFFF1F4,0xE6DCFFFFF1F5,0xF7EDFFFFF1F6,0x08FEFFFFF1F7,
-    0x9187FFFFF1F8,0xA298FFFFF1F9,0xB3A9FFFFF1FA,0xC4BAFFFFF1FB,0xD5CBFFFFF1FC,0xE6DCFFFFF1FD,0xF7EDFFFFF1FE,0x08FEFFFFF1FF,
-    0x9187FFFFF700,0xA298FFFFF701,0xB3A9FFFFF702,0xC4BAFFFFF703,0xD5CBFFFFF704,0xE6DCFFFFF705,0xF7EDFFFFF706,0x08FEFFFFF707,
-    0x9187FFFFF708,0xA298FFFFF709,0xB3A9FFFFF70A,0xC4BAFFFFF70B,0xD5CBFFFFF70C,0xE6DCFFFFF70D,0xF7EDFFFFF70E,0x08FEFFFFF70F,
-    0x9187FFFFF770,0xA298FFFFF771,0xB3A9FFFFF772,0xC4BAFFFFF773,0xD5CBFFFFF774,0xE6DCFFFFF775,0xF7EDFFFFF776,0x08FEFFFFF777,
-
-    0x19187FFFFF100,0x2A298FFFFF101,0x3B3A9FFFFF102,0x4C4BAFFFFF103,0x5D5CBFFFFF104,0x6E6DCFFFFF105,0x7F7EDFFFFF106,0x808FEFFFFF107,
-    0x19187FFFFF108,0x2A298FFFFF109,0x3B3A9FFFFF10A,0x4C4BAFFFFF10B,0x5D5CBFFFFF10C,0x6E6DCFFFFF10D,0x7F7EDFFFFF10E,0x808FEFFFFF10F,
-    0x19187FFFFF170,0x2A298FFFFF171,0x3B3A9FFFFF172,0x4C4BAFFFFF173,0x5D5CBFFFFF174,0x6E6DCFFFFF175,0x7F7EDFFFFF176,0x808FEFFFFF177,
-    0x19187FFFFF178,0x2A298FFFFF179,0x3B3A9FFFFF17A,0x4C4BAFFFFF17B,0x5D5CBFFFFF17C,0x6E6DCFFFFF17D,0x7F7EDFFFFF17E,0x808FEFFFFF17F,
-    0x19187FFFFF1F0,0x2A298FFFFF1F1,0x3B3A9FFFFF1F2,0x4C4BAFFFFF1F3,0x5D5CBFFFFF1F4,0x6E6DCFFFFF1F5,0x7F7EDFFFFF1F6,0x808FEFFFFF1F7,
-    0x19187FFFFF1F8,0x2A298FFFFF1F9,0x3B3A9FFFFF1FA,0x4C4BAFFFFF1FB,0x5D5CBFFFFF1FC,0x6E6DCFFFFF1FD,0x7F7EDFFFFF1FE,0x808FEFFFFF1FF,
-    0x19187FFFFF700,0x2A298FFFFF701,0x3B3A9FFFFF702,0x4C4BAFFFFF703,0x5D5CBFFFFF704,0x6E6DCFFFFF705,0x7F7EDFFFFF706,0x808FEFFFFF707,
-    0x19187FFFFF708,0x2A298FFFFF709,0x3B3A9FFFFF70A,0x4C4BAFFFFF70B,0x5D5CBFFFFF70C,0x6E6DCFFFFF70D,0x7F7EDFFFFF70E,0x808FEFFFFF70F,
-    0x19187FFFFF770,0x2A298FFFFF771,0x3B3A9FFFFF772,0x4C4BAFFFFF773,0x5D5CBFFFFF774,0x6E6DCFFFFF775,0x7F7EDFFFFF776,0x808FEFFFFF777,
-
-    0x919187FFFFF100,0xA2A298FFFFF101,0xB3B3A9FFFFF102,0xC4C4BAFFFFF103,0xD5D5CBFFFFF104,0xE6E6DCFFFFF105,0xF7F7EDFFFFF106,0xA808FEFFFFF107,
-    0x919187FFFFF108,0xA2A298FFFFF109,0xB3B3A9FFFFF10A,0xC4C4BAFFFFF10B,0xD5D5CBFFFFF10C,0xE6E6DCFFFFF10D,0xF7F7EDFFFFF10E,0xA808FEFFFFF10F,
-    0x919187FFFFF170,0xA2A298FFFFF171,0xB3B3A9FFFFF172,0xC4C4BAFFFFF173,0xD5D5CBFFFFF174,0xE6E6DCFFFFF175,0xF7F7EDFFFFF176,0xA808FEFFFFF177,
-    0x919187FFFFF178,0xA2A298FFFFF179,0xB3B3A9FFFFF17A,0xC4C4BAFFFFF17B,0xD5D5CBFFFFF17C,0xE6E6DCFFFFF17D,0xF7F7EDFFFFF17E,0xA808FEFFFFF17F,
-    0x919187FFFFF1F0,0xA2A298FFFFF1F1,0xB3B3A9FFFFF1F2,0xC4C4BAFFFFF1F3,0xD5D5CBFFFFF1F4,0xE6E6DCFFFFF1F5,0xF7F7EDFFFFF1F6,0xA808FEFFFFF1F7,
-    0x919187FFFFF1F8,0xA2A298FFFFF1F9,0xB3B3A9FFFFF1FA,0xC4C4BAFFFFF1FB,0xD5D5CBFFFFF1FC,0xE6E6DCFFFFF1FD,0xF7F7EDFFFFF1FE,0xA808FEFFFFF1FF,
-    0x919187FFFFF700,0xA2A298FFFFF701,0xB3B3A9FFFFF702,0xC4C4BAFFFFF703,0xD5D5CBFFFFF704,0xE6E6DCFFFFF705,0xF7F7EDFFFFF706,0xA808FEFFFFF707,
-    0x919187FFFFF708,0xA2A298FFFFF709,0xB3B3A9FFFFF70A,0xC4C4BAFFFFF70B,0xD5D5CBFFFFF70C,0xE6E6DCFFFFF70D,0xF7F7EDFFFFF70E,0xA808FEFFFFF70F,
-    0x919187FFFFF770,0xA2A298FFFFF771,0xB3B3A9FFFFF772,0xC4C4BAFFFFF773,0xD5D5CBFFFFF774,0xE6E6DCFFFFF775,0xF7F7EDFFFFF776,0xA808FEFFFFF777,
-
-    0xB919187FFFFF108,0xCA2A298FFFFF109,0xDB3B3A9FFFFF10A,0xEC4C4BAFFFFF10B,0xFD5D5CBFFFFF10C,0x0E6E6DCFFFFF10D,0x1F7F7EDFFFFF10E,0x2A808FEFFFFF10F,
-    0xB919187FFFFF170,0xCA2A298FFFFF171,0xDB3B3A9FFFFF172,0xEC4C4BAFFFFF173,0xFD5D5CBFFFFF174,0x0E6E6DCFFFFF175,0x1F7F7EDFFFFF176,0x2A808FEFFFFF177,
-    0xB919187FFFFF178,0xCA2A298FFFFF179,0xDB3B3A9FFFFF17A,0xEC4C4BAFFFFF17B,0xFD5D5CBFFFFF17C,0x0E6E6DCFFFFF17D,0x1F7F7EDFFFFF17E,0x2A808FEFFFFF17F,
-    0xB919187FFFFF1F0,0xCA2A298FFFFF1F1,0xDB3B3A9FFFFF1F2,0xEC4C4BAFFFFF1F3,0xFD5D5CBFFFFF1F4,0x0E6E6DCFFFFF1F5,0x1F7F7EDFFFFF1F6,0x2A808FEFFFFF1F7,
-    0xB919187FFFFF1F8,0xCA2A298FFFFF1F9,0xDB3B3A9FFFFF1FA,0xEC4C4BAFFFFF1FB,0xFD5D5CBFFFFF1FC,0x0E6E6DCFFFFF1FD,0x1F7F7EDFFFFF1FE,0x2A808FEFFFFF1FF,
-    0xB919187FFFFF700,0xCA2A298FFFFF701,0xDB3B3A9FFFFF702,0xEC4C4BAFFFFF703,0xFD5D5CBFFFFF704,0x0E6E6DCFFFFF705,0x1F7F7EDFFFFF706,0x2A808FEFFFFF707,
-    0xB919187FFFFF708,0xCA2A298FFFFF709,0xDB3B3A9FFFFF70A,0xEC4C4BAFFFFF70B,0xFD5D5CBFFFFF70C,0x0E6E6DCFFFFF70D,0x1F7F7EDFFFFF70E,0x2A808FEFFFFF70F,
-    0xB919187FFFFF770,0xCA2A298FFFFF771,0xDB3B3A9FFFFF772,0xEC4C4BAFFFFF773,0xFD5D5CBFFFFF774,0x0E6E6DCFFFFF775,0x1F7F7EDFFFFF776,0x2A808FEFFFFF777,
-
-    0xB919187FFFFF108,0xCA2A298FFFFF109,0xDB3B3A9FFFFF10A,0xEC4C4BAFFFFF10B,0xFD5D5CBFFFFF10C,0x0E6E6DCFFFFF10D,0x1F7F7EDFFFFF10E,0x2A808FEFFFFF10F,
-    0xB919187FFFFF170,0xCA2A298FFFFF171,0xDB3B3A9FFFFF172,0xEC4C4BAFFFFF173,0xFD5D5CBFFFFF174,0x0E6E6DCFFFFF175,0x1F7F7EDFFFFF176,0x2A808FEFFFFF177,
-    0xB919187FFFFF178,0xCA2A298FFFFF179,0xDB3B3A9FFFFF17A,0xEC4C4BAFFFFF17B,0xFD5D5CBFFFFF17C,0x0E6E6DCFFFFF17D,0x1F7F7EDFFFFF17E,0x2A808FEFFFFF17F,
-    0xB919187FFFFF1F0,0xCA2A298FFFFF1F1,0xDB3B3A9FFFFF1F2,0xEC4C4BAFFFFF1F3,0xFD5D5CBFFFFF1F4,0x0E6E6DCFFFFF1F5,0x1F7F7EDFFFFF1F6,0x2A808FEFFFFF1F7,
-    0xB919187FFFFF1F8,0xCA2A298FFFFF1F9,0xDB3B3A9FFFFF1FA,0xEC4C4BAFFFFF1FB,0xFD5D5CBFFFFF1FC,0x0E6E6DCFFFFF1FD,0x1F7F7EDFFFFF1FE,0x2A808FEFFFFF1FF,
-    0xB919187FFFFF700,0xCA2A298FFFFF701,0xDB3B3A9FFFFF702,0xEC4C4BAFFFFF703,0xFD5D5CBFFFFF704,0x0E6E6DCFFFFF705,0x1F7F7EDFFFFF706,0x2A808FEFFFFF707,
-    0xB919187FFFFF708,0xCA2A298FFFFF709,0xDB3B3A9FFFFF70A,0xEC4C4BAFFFFF70B,0xFD5D5CBFFFFF70C,0x0E6E6DCFFFFF70D,0x1F7F7EDFFFFF70E,0x2A808FEFFFFF70F,
-    0xB919187FFFFF770,0xCA2A298FFFFF771,0xDB3B3A9FFFFF772,0xEC4C4BAFFFFF773,0xFD5D5CBFFFFF774,0x0E6E6DCFFFFF775,0x1F7F7EDFFFFF776,0x2A808FEFFFFF777,
-
-    0x3B919187FFFFF108,0x4CA2A298FFFFF109,0x5DB3B3A9FFFFF10A,0x6EC4C4BAFFFFF10B,0x7FD5D5CBFFFFF10C,0x80E6E6DCFFFFF10D,0x91F7F7EDFFFFF10E,0xA2A808FEFFFFF10F,
-    0x3B919187FFFFF170,0x4CA2A298FFFFF171,0x5DB3B3A9FFFFF172,0x6EC4C4BAFFFFF173,0x7FD5D5CBFFFFF174,0x80E6E6DCFFFFF175,0x91F7F7EDFFFFF176,0xA2A808FEFFFFF177,
-    0x3B919187FFFFF178,0x4CA2A298FFFFF179,0x5DB3B3A9FFFFF17A,0x6EC4C4BAFFFFF17B,0x7FD5D5CBFFFFF17C,0x80E6E6DCFFFFF17D,0x91F7F7EDFFFFF17E,0xA2A808FEFFFFF17F,
-    0x3B919187FFFFF1F0,0x4CA2A298FFFFF1F1,0x5DB3B3A9FFFFF1F2,0x6EC4C4BAFFFFF1F3,0x7FD5D5CBFFFFF1F4,0x80E6E6DCFFFFF1F5,0x91F7F7EDFFFFF1F6,0xA2A808FEFFFFF1F7,
-    0x3B919187FFFFF1F8,0x4CA2A298FFFFF1F9,0x5DB3B3A9FFFFF1FA,0x6EC4C4BAFFFFF1FB,0x7FD5D5CBFFFFF1FC,0x80E6E6DCFFFFF1FD,0x91F7F7EDFFFFF1FE,0xA2A808FEFFFFF1FF,
-    0x3B919187FFFFF700,0x4CA2A298FFFFF701,0x5DB3B3A9FFFFF702,0x6EC4C4BAFFFFF703,0x7FD5D5CBFFFFF704,0x80E6E6DCFFFFF705,0x91F7F7EDFFFFF706,0xA2A808FEFFFFF707,
-    0x3B919187FFFFF708,0x4CA2A298FFFFF709,0x5DB3B3A9FFFFF70A,0x6EC4C4BAFFFFF70B,0x7FD5D5CBFFFFF70C,0x80E6E6DCFFFFF70D,0x91F7F7EDFFFFF70E,0xA2A808FEFFFFF70F,
-    0x3B919187FFFFF770,0x4CA2A298FFFFF771,0x5DB3B3A9FFFFF772,0x6EC4C4BAFFFFF773,0x7FD5D5CBFFFFF774,0x80E6E6DCFFFFF775,0x91F7F7EDFFFFF776,0xA2A808FEFFFFF777,
-};
-// clang-format on
-static inline constexpr auto benchmark_integer_count = sizeof(benchmark_integers) / sizeof(int64_t);
 
 struct benchmark_result
 {
-    benchmark_result(std::string name, std::string version, size_t size, int64_t time)
+    benchmark_result(std::string name, std::string version, size_t size, uint64_t time)
         : name(name), version(version), size(size), time(time)
     {
     }
@@ -199,24 +25,61 @@ struct benchmark_result
     std::string name;
     std::string version;
     size_t      size = 0;
-    int64_t     time = 0;
+    uint64_t    time = 0;
 };
 
-benchmark_result benchmark_protobuf_serialization(size_t count)
+enum class benchmark_type_e : int
+{
+    LN_STRING,  // 字符串
+    LN_INTEGER, // 整数
+    LN_FLOAT,   // 浮点数
+    LN_ALL,     //
+};
+
+void benchmark_data_init(benchmark_data& data, benchmark_type_e type)
+{
+    if (type == benchmark_type_e::LN_STRING || type == benchmark_type_e::LN_ALL)
+    {
+        std::string str;
+        for (int i = 1; i < 1024; i++)
+        {
+            str.append(std::to_string(i));
+            data.strs.push_back(str);
+        }
+    }
+
+    if (type == benchmark_type_e::LN_INTEGER || type == benchmark_type_e::LN_ALL)
+    {
+        for (uint64_t i = std::numeric_limits<uint64_t>::max(); i > std::numeric_limits<uint64_t>::min(); i /= 1.05)
+        {
+            data.ints.push_back(i);
+        }
+    }
+
+    if (type == benchmark_type_e::LN_FLOAT || type == benchmark_type_e::LN_ALL)
+    {
+        for (float64_t f = std::numeric_limits<float64_t>::min(); f < std::numeric_limits<float64_t>::max(); f *= 1.5)
+        {
+            data.floats.push_back(f);
+        }
+    }
+}
+
+benchmark_result benchmark_protobuf_serialization(benchmark_data& data)
 {
     using namespace protobuf_test;
     Record r1;
-    for (size_t i = 0; i < benchmark_integer_count; i++)
+    for (size_t i = 0; i < data.ints.size(); i++)
     {
-        r1.add_ids(benchmark_integers[i]);
+        r1.add_ids(data.ints[i]);
     }
-
-    for (size_t i = 0; i < benchmark_strings_count; i++)
+    for (size_t i = 0; i < data.strs.size(); i++)
     {
-        r1.add_strings(benchmark_string_value[0]);
-        r1.add_strings(benchmark_string_value[1]);
-        r1.add_strings(benchmark_string_value[2]);
-        r1.add_strings(benchmark_string_value[3]);
+        r1.add_strings(data.strs[i]);
+    }
+    for (size_t i = 0; i < data.floats.size(); i++)
+    {
+        r1.add_floats(data.floats[i]);
     }
 
     std::string serialized;
@@ -227,25 +90,24 @@ benchmark_result benchmark_protobuf_serialization(size_t count)
     {
         throw std::logic_error("protobuf's case: deserialization failed");
     }
-    for (size_t i = 0; i < benchmark_integer_count; i++)
+    for (size_t i = 0; i < data.ints.size(); i++)
     {
         if (r1.ids().Get(i) != r2.ids().Get(i))
             throw std::logic_error("protobuf's case: deserialization failed : ids");
     }
-    for (size_t i = 0; i < benchmark_strings_count; i++)
+    for (size_t i = 0; i < data.strs.size(); i++)
     {
-        if (r1.strings().Get(i + 0) != r2.strings().Get(i + 0))
+        if (r1.strings().Get(i) != r2.strings().Get(i))
             throw std::logic_error("protobuf's case: deserialization failed : strings");
-        if (r1.strings().Get(i + 1) != r2.strings().Get(i + 1))
-            throw std::logic_error("protobuf's case: deserialization failed : strings");
-        if (r1.strings().Get(i + 2) != r2.strings().Get(i + 2))
-            throw std::logic_error("protobuf's case: deserialization failed : strings");
-        if (r1.strings().Get(i + 3) != r2.strings().Get(i + 3))
-            throw std::logic_error("protobuf's case: deserialization failed : strings");
+    }
+    for (size_t i = 0; i < data.floats.size(); i++)
+    {
+        if (r1.floats().Get(i) != r2.floats().Get(i))
+            throw std::logic_error("protobuf's case: deserialization failed : floats");
     }
 
     auto start = std::chrono::high_resolution_clock::now();
-    for (size_t i = 0; i < count; i++)
+    for (size_t i = 0; i < data.count; i++)
     {
         serialized.clear();
         r1.SerializeToString(&serialized);
@@ -255,31 +117,30 @@ benchmark_result benchmark_protobuf_serialization(size_t count)
     auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(finish - start).count();
     return benchmark_result("protobuf", LN_PP_STRING(GOOGLE_PROTOBUF_VERSION), serialized.size(), duration);
 }
+
 struct lnserializerRecord
 {
-    using integers_t = std::vector<int64_t>;
+    using integers_t = std::vector<uint64_t>;
+    using floats_t   = std::vector<float64_t>;
     using strings_t  = std::vector<std::string>;
 
     integers_t ids;
+    floats_t   floats;
     strings_t  strings;
 };
-LN_TYPE_INFO_FIELDS_DECL(lnserializerRecord, ids, strings);
+LN_TYPE_INFO_FIELDS_DECL(lnserializerRecord, ids, floats, strings);
 
 template <std::size_t opts>
-benchmark_result benchmark_lnserializer_serialization(size_t count)
+benchmark_result benchmark_lnserializer_serialization(benchmark_data& data)
 {
     using namespace ln;
     using container_t = serialization_container<std::string, opts>;
 
     lnserializerRecord r1;
-    r1.ids.insert(r1.ids.end(), benchmark_integers, benchmark_integers + benchmark_integer_count);
-    for (size_t i = 0; i < benchmark_strings_count; i++)
-    {
-        r1.strings.push_back(benchmark_string_value[0]);
-        r1.strings.push_back(benchmark_string_value[1]);
-        r1.strings.push_back(benchmark_string_value[2]);
-        r1.strings.push_back(benchmark_string_value[3]);
-    }
+    r1.ids     = data.ints;
+    r1.strings = data.strs;
+    r1.floats  = data.floats;
+
     container_t serialized;
     serialized << r1;
     lnserializerRecord r2;
@@ -291,6 +152,8 @@ benchmark_result benchmark_lnserializer_serialization(size_t count)
         throw std::logic_error("lnserializer's case: deserialization failed : ids");
     if (r1.strings != r2.strings)
         throw std::logic_error("lnserializer's case: deserialization failed : strings");
+    if (r1.floats != r2.floats)
+        throw std::logic_error("lnserializer's case: deserialization failed : floats");
 
     std::string tag;
     if (opts & serialization_options::LN_COMPACTED)
@@ -303,11 +166,11 @@ benchmark_result benchmark_lnserializer_serialization(size_t count)
     }
 
     auto start = std::chrono::high_resolution_clock::now();
-    for (size_t i = 0; i < count; i++)
+    for (size_t i = 0; i < data.count; i++)
     {
-        // serialized.cont.clear();
+        serialized.cont.clear();
         serialized.offset = 0;
-        // serialized << r1;
+        serialized << r1;
         serialized >> r2;
     }
     auto finish   = std::chrono::high_resolution_clock::now();
@@ -316,20 +179,14 @@ benchmark_result benchmark_lnserializer_serialization(size_t count)
 }
 
 template <std::size_t opts>
-benchmark_result benchmark_yas_serialization(size_t count)
+benchmark_result benchmark_yas_serialization(benchmark_data& data)
 {
     using namespace yas_test;
     Record r1;
     Record r2;
-    r1.ids.insert(r1.ids.end(), benchmark_integers, benchmark_integers + benchmark_integer_count);
-
-    for (size_t i = 0; i < benchmark_strings_count; i++)
-    {
-        r1.strings.push_back(benchmark_string_value[0]);
-        r1.strings.push_back(benchmark_string_value[1]);
-        r1.strings.push_back(benchmark_string_value[2]);
-        r1.strings.push_back(benchmark_string_value[3]);
-    }
+    r1.ids     = data.ints;
+    r1.strings = data.strs;
+    r1.floats  = data.floats;
 
     std::string serialized;
 
@@ -340,6 +197,8 @@ benchmark_result benchmark_yas_serialization(size_t count)
         throw std::logic_error("yas's case: deserialization failed : ids");
     if (r1.strings != r2.strings)
         throw std::logic_error("yas's case: deserialization failed : strings");
+    if (r1.floats != r2.floats)
+        throw std::logic_error("yas's case: deserialization failed : floats");
 
     std::string tag;
     if (opts & yas::compacted)
@@ -352,10 +211,10 @@ benchmark_result benchmark_yas_serialization(size_t count)
     }
 
     auto start = std::chrono::high_resolution_clock::now();
-    for (size_t i = 0; i < count; i++)
+    for (size_t i = 0; i < data.count; i++)
     {
-        // serialized.clear();
-        // r1.to_string<opts>(serialized);
+        serialized.clear();
+        r1.to_string<opts>(serialized);
         r2.from_string<opts>(serialized);
     }
     auto finish   = std::chrono::high_resolution_clock::now();
@@ -364,21 +223,15 @@ benchmark_result benchmark_yas_serialization(size_t count)
     return benchmark_result(tag, YAS_VERSION_STRING, serialized.size(), duration);
 }
 
-benchmark_result benchmark_cereal_serialization(size_t count)
+benchmark_result benchmark_cereal_serialization(benchmark_data& data)
 {
     using namespace cereal_test;
 
     Record r1;
     Record r2;
-    r1.ids.insert(r1.ids.end(), benchmark_integers, benchmark_integers + benchmark_integer_count);
-
-    for (size_t i = 0; i < benchmark_strings_count; i++)
-    {
-        r1.strings.push_back(benchmark_string_value[0]);
-        r1.strings.push_back(benchmark_string_value[1]);
-        r1.strings.push_back(benchmark_string_value[2]);
-        r1.strings.push_back(benchmark_string_value[3]);
-    }
+    r1.ids     = data.ints;
+    r1.strings = data.strs;
+    r1.floats  = data.floats;
 
     std::string serialized;
 
@@ -391,7 +244,7 @@ benchmark_result benchmark_cereal_serialization(size_t count)
     }
 
     auto start = std::chrono::high_resolution_clock::now();
-    for (size_t i = 0; i < count; i++)
+    for (size_t i = 0; i < data.count; i++)
     {
         serialized.clear();
         r1.to_string(serialized);
@@ -403,54 +256,41 @@ benchmark_result benchmark_cereal_serialization(size_t count)
     return benchmark_result("cereal", "1.3.2", serialized.size(), duration);
 }
 
-class custom_t
-{
-public:
-    uint8_t     u8;
-    std::string str;
-
-    bool operator==(const custom_t& other)
-    {
-        return u8 == other.u8 && str == other.str;
-    }
-
-    inline static constexpr auto serialize_tuple()
-    {
-        return std::make_tuple(&custom_t::u8, &custom_t::str);
-    }
-};
-
+//
 int main(int argc, char** argv)
 {
-    size_t                        count = 10000;
+    int            benchmark_type = std::stoi(argv[1]);
+    size_t         count          = std::stoull(argv[2]);
+    benchmark_data data;
+    benchmark_data_init(data, static_cast<benchmark_type_e>(benchmark_type));
+    data.count = count;
     std::vector<benchmark_result> results;
-    results.push_back(benchmark_protobuf_serialization(count));
+    results.push_back(benchmark_protobuf_serialization(data));
     results.push_back(benchmark_lnserializer_serialization<
                       ln::serialization_options::LN_BINARY
-                      | ln::serialization_options::LN_NO_HEADER>(count));
+                      | ln::serialization_options::LN_NO_HEADER>(data));
     results.push_back(benchmark_lnserializer_serialization<
                       ln::serialization_options::LN_BINARY
                       | ln::serialization_options::LN_NO_HEADER
-                      | ln::serialization_options::LN_COMPACTED>(count));
-    results.push_back(benchmark_yas_serialization<yas::binary | yas::no_header>(count));
-    results.push_back(benchmark_yas_serialization<yas::binary | yas::no_header | yas::compacted>(count));
-    results.push_back(benchmark_cereal_serialization(count));
+                      | ln::serialization_options::LN_COMPACTED>(data));
+    results.push_back(benchmark_yas_serialization<yas::binary | yas::no_header>(data));
+    results.push_back(benchmark_yas_serialization<yas::binary | yas::no_header | yas::compacted>(data));
+    results.push_back(benchmark_cereal_serialization(data));
 
-    // print CSV header
-    std::cout << "serializer,version,count,size,time" << std::endl;
+    std::cout << "serializer\tversion\tcount\tsize\ttime" << std::endl;
     for (const auto& result : results)
     {
-        std::cout << result.name << "," << result.version << "," << count << "," << result.size << "," << result.time << std::endl;
+        std::cout << result.name << "\t" << result.version << "\t" << count << "\t" << result.size << "\t" << result.time << std::endl;
     }
 
-    for (const auto& result : results)
-    {
-        std::cout << "Serializer: " << result.name << std::endl;
-        std::cout << "Version   : " << result.version << std::endl;
-        std::cout << "count     : " << count << std::endl;
-        std::cout << "Size      : " << result.size << " bytes" << std::endl;
-        std::cout << "Time      : " << result.time << " milliseconds" << std::endl;
-        std::cout << std::endl;
-    }
+    //for (const auto& result : results)
+    //{
+    //    std::cout << "Serializer: " << result.name << std::endl;
+    //    std::cout << "Version   : " << result.version << std::endl;
+    //    std::cout << "count     : " << count << std::endl;
+    //    std::cout << "Size      : " << result.size << " bytes" << std::endl;
+    //    std::cout << "Time      : " << result.time << " milliseconds" << std::endl;
+    //    std::cout << std::endl;
+    //}
     return 0;
 }

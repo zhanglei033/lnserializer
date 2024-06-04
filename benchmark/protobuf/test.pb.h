@@ -192,23 +192,24 @@ class Record final : public ::google::protobuf::Message
   enum : int {
     kIdsFieldNumber = 1,
     kStringsFieldNumber = 2,
+    kFloatsFieldNumber = 3,
   };
-  // repeated int64 ids = 1;
+  // repeated uint64 ids = 1;
   int ids_size() const;
   private:
   int _internal_ids_size() const;
 
   public:
   void clear_ids() ;
-  ::int64_t ids(int index) const;
-  void set_ids(int index, ::int64_t value);
-  void add_ids(::int64_t value);
-  const ::google::protobuf::RepeatedField<::int64_t>& ids() const;
-  ::google::protobuf::RepeatedField<::int64_t>* mutable_ids();
+  ::uint64_t ids(int index) const;
+  void set_ids(int index, ::uint64_t value);
+  void add_ids(::uint64_t value);
+  const ::google::protobuf::RepeatedField<::uint64_t>& ids() const;
+  ::google::protobuf::RepeatedField<::uint64_t>* mutable_ids();
 
   private:
-  const ::google::protobuf::RepeatedField<::int64_t>& _internal_ids() const;
-  ::google::protobuf::RepeatedField<::int64_t>* _internal_mutable_ids();
+  const ::google::protobuf::RepeatedField<::uint64_t>& _internal_ids() const;
+  ::google::protobuf::RepeatedField<::uint64_t>* _internal_mutable_ids();
 
   public:
   // repeated string strings = 2;
@@ -239,12 +240,30 @@ class Record final : public ::google::protobuf::Message
   ::google::protobuf::RepeatedPtrField<std::string>* _internal_mutable_strings();
 
   public:
+  // repeated double floats = 3;
+  int floats_size() const;
+  private:
+  int _internal_floats_size() const;
+
+  public:
+  void clear_floats() ;
+  double floats(int index) const;
+  void set_floats(int index, double value);
+  void add_floats(double value);
+  const ::google::protobuf::RepeatedField<double>& floats() const;
+  ::google::protobuf::RepeatedField<double>* mutable_floats();
+
+  private:
+  const ::google::protobuf::RepeatedField<double>& _internal_floats() const;
+  ::google::protobuf::RepeatedField<double>* _internal_mutable_floats();
+
+  public:
   // @@protoc_insertion_point(class_scope:protobuf_test.Record)
  private:
   class _Internal;
   friend class ::google::protobuf::internal::TcParser;
   static const ::google::protobuf::internal::TcParseTable<
-      1, 2, 0,
+      2, 3, 0,
       36, 2>
       _table_;
 
@@ -265,9 +284,10 @@ class Record final : public ::google::protobuf::Message
     inline explicit Impl_(::google::protobuf::internal::InternalVisibility visibility,
                           ::google::protobuf::Arena* arena, const Impl_& from,
                           const Record& from_msg);
-    ::google::protobuf::RepeatedField<::int64_t> ids_;
+    ::google::protobuf::RepeatedField<::uint64_t> ids_;
     mutable ::google::protobuf::internal::CachedSize _ids_cached_byte_size_;
     ::google::protobuf::RepeatedPtrField<std::string> strings_;
+    ::google::protobuf::RepeatedField<double> floats_;
     mutable ::google::protobuf::internal::CachedSize _cached_size_;
     PROTOBUF_TSAN_DECLARE_MEMBER
   };
@@ -291,7 +311,7 @@ class Record final : public ::google::protobuf::Message
 
 // Record
 
-// repeated int64 ids = 1;
+// repeated uint64 ids = 1;
 inline int Record::_internal_ids_size() const {
   return _internal_ids().size();
 }
@@ -302,36 +322,36 @@ inline void Record::clear_ids() {
   ::google::protobuf::internal::TSanWrite(&_impl_);
   _impl_.ids_.Clear();
 }
-inline ::int64_t Record::ids(int index) const {
+inline ::uint64_t Record::ids(int index) const {
   // @@protoc_insertion_point(field_get:protobuf_test.Record.ids)
   return _internal_ids().Get(index);
 }
-inline void Record::set_ids(int index, ::int64_t value) {
+inline void Record::set_ids(int index, ::uint64_t value) {
   _internal_mutable_ids()->Set(index, value);
   // @@protoc_insertion_point(field_set:protobuf_test.Record.ids)
 }
-inline void Record::add_ids(::int64_t value) {
+inline void Record::add_ids(::uint64_t value) {
   ::google::protobuf::internal::TSanWrite(&_impl_);
   _internal_mutable_ids()->Add(value);
   // @@protoc_insertion_point(field_add:protobuf_test.Record.ids)
 }
-inline const ::google::protobuf::RepeatedField<::int64_t>& Record::ids() const
+inline const ::google::protobuf::RepeatedField<::uint64_t>& Record::ids() const
     ABSL_ATTRIBUTE_LIFETIME_BOUND {
   // @@protoc_insertion_point(field_list:protobuf_test.Record.ids)
   return _internal_ids();
 }
-inline ::google::protobuf::RepeatedField<::int64_t>* Record::mutable_ids()
+inline ::google::protobuf::RepeatedField<::uint64_t>* Record::mutable_ids()
     ABSL_ATTRIBUTE_LIFETIME_BOUND {
   // @@protoc_insertion_point(field_mutable_list:protobuf_test.Record.ids)
   ::google::protobuf::internal::TSanWrite(&_impl_);
   return _internal_mutable_ids();
 }
-inline const ::google::protobuf::RepeatedField<::int64_t>&
+inline const ::google::protobuf::RepeatedField<::uint64_t>&
 Record::_internal_ids() const {
   ::google::protobuf::internal::TSanRead(&_impl_);
   return _impl_.ids_;
 }
-inline ::google::protobuf::RepeatedField<::int64_t>* Record::_internal_mutable_ids() {
+inline ::google::protobuf::RepeatedField<::uint64_t>* Record::_internal_mutable_ids() {
   ::google::protobuf::internal::TSanRead(&_impl_);
   return &_impl_.ids_;
 }
@@ -436,6 +456,51 @@ inline ::google::protobuf::RepeatedPtrField<std::string>*
 Record::_internal_mutable_strings() {
   ::google::protobuf::internal::TSanRead(&_impl_);
   return &_impl_.strings_;
+}
+
+// repeated double floats = 3;
+inline int Record::_internal_floats_size() const {
+  return _internal_floats().size();
+}
+inline int Record::floats_size() const {
+  return _internal_floats_size();
+}
+inline void Record::clear_floats() {
+  ::google::protobuf::internal::TSanWrite(&_impl_);
+  _impl_.floats_.Clear();
+}
+inline double Record::floats(int index) const {
+  // @@protoc_insertion_point(field_get:protobuf_test.Record.floats)
+  return _internal_floats().Get(index);
+}
+inline void Record::set_floats(int index, double value) {
+  _internal_mutable_floats()->Set(index, value);
+  // @@protoc_insertion_point(field_set:protobuf_test.Record.floats)
+}
+inline void Record::add_floats(double value) {
+  ::google::protobuf::internal::TSanWrite(&_impl_);
+  _internal_mutable_floats()->Add(value);
+  // @@protoc_insertion_point(field_add:protobuf_test.Record.floats)
+}
+inline const ::google::protobuf::RepeatedField<double>& Record::floats() const
+    ABSL_ATTRIBUTE_LIFETIME_BOUND {
+  // @@protoc_insertion_point(field_list:protobuf_test.Record.floats)
+  return _internal_floats();
+}
+inline ::google::protobuf::RepeatedField<double>* Record::mutable_floats()
+    ABSL_ATTRIBUTE_LIFETIME_BOUND {
+  // @@protoc_insertion_point(field_mutable_list:protobuf_test.Record.floats)
+  ::google::protobuf::internal::TSanWrite(&_impl_);
+  return _internal_mutable_floats();
+}
+inline const ::google::protobuf::RepeatedField<double>&
+Record::_internal_floats() const {
+  ::google::protobuf::internal::TSanRead(&_impl_);
+  return _impl_.floats_;
+}
+inline ::google::protobuf::RepeatedField<double>* Record::_internal_mutable_floats() {
+  ::google::protobuf::internal::TSanRead(&_impl_);
+  return &_impl_.floats_;
 }
 
 #ifdef __GNUC__

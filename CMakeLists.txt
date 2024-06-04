@@ -1,8 +1,11 @@
 cmake_minimum_required(VERSION 3.8)
 
-include(cmake/funcs.cmake)
-include(cmake/platform.cmake)
-include(cmake/vars.cmake)
+set(LN_COMPONENT_PATH ${CMAKE_CURRENT_SOURCE_DIR}/lncomponent)
+
+include(${LN_COMPONENT_PATH}/cmake/funcs.cmake)
+include(${LN_COMPONENT_PATH}/cmake/platform.cmake)
+include(${LN_COMPONENT_PATH}/cmake/vars.cmake)
+
 project(lnserializer_benchmark VERSION 1.0)
 # C++17 C17
 set(CMAKE_C_STANDARD 17)
@@ -17,11 +20,6 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 # 编译程序
 add_subdirectory(benchmark/third_party/protobuf)
 
-foreach(COMPONENT_PATH ${COMPONENT_PATHS})
-	message("add_subdirectory:${COMPONENT_PATH}")
-	add_subdirectory(${COMPONENT_PATH})
-endforeach()
-
 set(CUR_HEADER benchmark/protobuf/test.pb.h)
 set(CUR_SOURCE 
 	benchmark/benchmark.cpp 
@@ -31,6 +29,7 @@ add_executable(${PROJECT_NAME} ${CUR_SOURCE} ${CUR_HEADER})
 include_directories(benchmark/third_party/protobuf/src)
 include_directories(benchmark/third_party/protobuf/third_party/abseil-cpp)
 include_directories(benchmark/third_party)
+include_directories(./)
 include_all()
 
 target_link_libraries(${PROJECT_NAME}

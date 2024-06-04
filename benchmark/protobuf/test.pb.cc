@@ -30,6 +30,7 @@ inline constexpr Record::Impl_::Impl_(
       : ids_{},
         _ids_cached_byte_size_{0},
         strings_{},
+        floats_{},
         _cached_size_{0} {}
 
 template <typename>
@@ -63,6 +64,7 @@ const ::uint32_t
         ~0u,  // no sizeof(Split)
         PROTOBUF_FIELD_OFFSET(::protobuf_test::Record, _impl_.ids_),
         PROTOBUF_FIELD_OFFSET(::protobuf_test::Record, _impl_.strings_),
+        PROTOBUF_FIELD_OFFSET(::protobuf_test::Record, _impl_.floats_),
 };
 
 static const ::_pbi::MigrationSchema
@@ -74,14 +76,15 @@ static const ::_pb::Message* const file_default_instances[] = {
 };
 const char descriptor_table_protodef_test_2eproto[] ABSL_ATTRIBUTE_SECTION_VARIABLE(
     protodesc_cold) = {
-    "\n\ntest.proto\022\rprotobuf_test\"&\n\006Record\022\013\n"
-    "\003ids\030\001 \003(\003\022\017\n\007strings\030\002 \003(\tb\006proto3"
+    "\n\ntest.proto\022\rprotobuf_test\"6\n\006Record\022\013\n"
+    "\003ids\030\001 \003(\004\022\017\n\007strings\030\002 \003(\t\022\016\n\006floats\030\003 "
+    "\003(\001b\006proto3"
 };
 static ::absl::once_flag descriptor_table_test_2eproto_once;
 PROTOBUF_CONSTINIT const ::_pbi::DescriptorTable descriptor_table_test_2eproto = {
     false,
     false,
-    75,
+    91,
     descriptor_table_protodef_test_2eproto,
     "test.proto",
     &descriptor_table_test_2eproto_once,
@@ -112,6 +115,7 @@ inline PROTOBUF_NDEBUG_INLINE Record::Impl_::Impl_(
       : ids_{visibility, arena, from.ids_},
         _ids_cached_byte_size_{0},
         strings_{visibility, arena, from.strings_},
+        floats_{visibility, arena, from.floats_},
         _cached_size_{0} {}
 
 Record::Record(
@@ -132,6 +136,7 @@ inline PROTOBUF_NDEBUG_INLINE Record::Impl_::Impl_(
       : ids_{visibility, arena},
         _ids_cached_byte_size_{0},
         strings_{visibility, arena},
+        floats_{visibility, arena},
         _cached_size_{0} {}
 
 inline void Record::SharedCtor(::_pb::Arena* arena) {
@@ -168,15 +173,15 @@ Record::GetClassData() const {
   return _data_.base();
 }
 PROTOBUF_CONSTINIT PROTOBUF_ATTRIBUTE_INIT_PRIORITY1
-const ::_pbi::TcParseTable<1, 2, 0, 36, 2> Record::_table_ = {
+const ::_pbi::TcParseTable<2, 3, 0, 36, 2> Record::_table_ = {
   {
     0,  // no _has_bits_
     0, // no _extensions_
-    2, 8,  // max_field_number, fast_idx_mask
+    3, 24,  // max_field_number, fast_idx_mask
     offsetof(decltype(_table_), field_lookup_table),
-    4294967292,  // skipmap
+    4294967288,  // skipmap
     offsetof(decltype(_table_), field_entries),
-    2,  // num_field_entries
+    3,  // num_field_entries
     0,  // num_aux_entries
     offsetof(decltype(_table_), field_names),  // no aux_entries
     &_Record_default_instance_._instance,
@@ -186,21 +191,28 @@ const ::_pbi::TcParseTable<1, 2, 0, 36, 2> Record::_table_ = {
     ::_pbi::TcParser::GetTable<::protobuf_test::Record>(),  // to_prefetch
     #endif  // PROTOBUF_PREFETCH_PARSE_TABLE
   }, {{
+    {::_pbi::TcParser::MiniParse, {}},
+    // repeated uint64 ids = 1;
+    {::_pbi::TcParser::FastV64P1,
+     {10, 63, 0, PROTOBUF_FIELD_OFFSET(Record, _impl_.ids_)}},
     // repeated string strings = 2;
     {::_pbi::TcParser::FastUR1,
      {18, 63, 0, PROTOBUF_FIELD_OFFSET(Record, _impl_.strings_)}},
-    // repeated int64 ids = 1;
-    {::_pbi::TcParser::FastV64P1,
-     {10, 63, 0, PROTOBUF_FIELD_OFFSET(Record, _impl_.ids_)}},
+    // repeated double floats = 3;
+    {::_pbi::TcParser::FastF64P1,
+     {26, 63, 0, PROTOBUF_FIELD_OFFSET(Record, _impl_.floats_)}},
   }}, {{
     65535, 65535
   }}, {{
-    // repeated int64 ids = 1;
+    // repeated uint64 ids = 1;
     {PROTOBUF_FIELD_OFFSET(Record, _impl_.ids_), 0, 0,
-    (0 | ::_fl::kFcRepeated | ::_fl::kPackedInt64)},
+    (0 | ::_fl::kFcRepeated | ::_fl::kPackedUInt64)},
     // repeated string strings = 2;
     {PROTOBUF_FIELD_OFFSET(Record, _impl_.strings_), 0, 0,
     (0 | ::_fl::kFcRepeated | ::_fl::kUtf8String | ::_fl::kRepSString)},
+    // repeated double floats = 3;
+    {PROTOBUF_FIELD_OFFSET(Record, _impl_.floats_), 0, 0,
+    (0 | ::_fl::kFcRepeated | ::_fl::kPackedDouble)},
   }},
   // no aux_entries
   {{
@@ -219,6 +231,7 @@ PROTOBUF_NOINLINE void Record::Clear() {
 
   _impl_.ids_.Clear();
   _impl_.strings_.Clear();
+  _impl_.floats_.Clear();
   _internal_metadata_.Clear<::google::protobuf::UnknownFieldSet>();
 }
 
@@ -229,11 +242,11 @@ PROTOBUF_NOINLINE void Record::Clear() {
   ::uint32_t cached_has_bits = 0;
   (void)cached_has_bits;
 
-  // repeated int64 ids = 1;
+  // repeated uint64 ids = 1;
   {
     int byte_size = _impl_._ids_cached_byte_size_.Get();
     if (byte_size > 0) {
-      target = stream->WriteInt64Packed(
+      target = stream->WriteUInt64Packed(
           1, _internal_ids(), byte_size, target);
     }
   }
@@ -244,6 +257,11 @@ PROTOBUF_NOINLINE void Record::Clear() {
     ::google::protobuf::internal::WireFormatLite::VerifyUtf8String(
         s.data(), static_cast<int>(s.length()), ::google::protobuf::internal::WireFormatLite::SERIALIZE, "protobuf_test.Record.strings");
     target = stream->WriteString(2, s, target);
+  }
+
+  // repeated double floats = 3;
+  if (this->_internal_floats_size() > 0) {
+    target = stream->WriteFixedPacked(3, _internal_floats(), target);
   }
 
   if (PROTOBUF_PREDICT_FALSE(_internal_metadata_.have_unknown_fields())) {
@@ -264,9 +282,9 @@ PROTOBUF_NOINLINE void Record::Clear() {
   (void) cached_has_bits;
 
   ::_pbi::Prefetch5LinesFrom7Lines(reinterpret_cast<const void*>(this));
-  // repeated int64 ids = 1;
+  // repeated uint64 ids = 1;
   {
-    std::size_t data_size = ::_pbi::WireFormatLite::Int64Size(
+    std::size_t data_size = ::_pbi::WireFormatLite::UInt64Size(
         this->_internal_ids())
     ;
     _impl_._ids_cached_byte_size_.Set(::_pbi::ToCachedSize(data_size));
@@ -283,6 +301,18 @@ PROTOBUF_NOINLINE void Record::Clear() {
     total_size += ::google::protobuf::internal::WireFormatLite::StringSize(
         _internal_strings().Get(i));
   }
+  // repeated double floats = 3;
+  {
+    std::size_t data_size = std::size_t{8} *
+        ::_pbi::FromIntSize(this->_internal_floats_size())
+    ;
+    std::size_t tag_size = data_size == 0
+        ? 0
+        : 1 + ::_pbi::WireFormatLite::Int32Size(
+                            static_cast<int32_t>(data_size))
+    ;
+    total_size += tag_size + data_size;
+  }
   return MaybeComputeUnknownFieldsSize(total_size, &_impl_._cached_size_);
 }
 
@@ -297,6 +327,7 @@ void Record::MergeImpl(::google::protobuf::MessageLite& to_msg, const ::google::
 
   _this->_internal_mutable_ids()->MergeFrom(from._internal_ids());
   _this->_internal_mutable_strings()->MergeFrom(from._internal_strings());
+  _this->_internal_mutable_floats()->MergeFrom(from._internal_floats());
   _this->_internal_metadata_.MergeFrom<::google::protobuf::UnknownFieldSet>(from._internal_metadata_);
 }
 
@@ -313,6 +344,7 @@ void Record::InternalSwap(Record* PROTOBUF_RESTRICT other) {
   _internal_metadata_.InternalSwap(&other->_internal_metadata_);
   _impl_.ids_.InternalSwap(&other->_impl_.ids_);
   _impl_.strings_.InternalSwap(&other->_impl_.strings_);
+  _impl_.floats_.InternalSwap(&other->_impl_.floats_);
 }
 
 ::google::protobuf::Metadata Record::GetMetadata() const {

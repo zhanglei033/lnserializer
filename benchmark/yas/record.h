@@ -13,16 +13,18 @@ namespace yas_test {
 
 struct Record
 {
-    using integers_t = std::vector<int64_t>;
+    using integers_t = std::vector<uint64_t>;
     using strings_t  = std::vector<std::string>;
+    using floats_t  = std::vector<double>;
 
     integers_t ids;
     strings_t  strings;
+    floats_t   floats;
 
     template <typename Archive>
     void serialize(Archive& ar)
     {
-        ar & ids & strings;
+        ar & ids & floats & strings;
     }
 
     template <std::size_t opts>
